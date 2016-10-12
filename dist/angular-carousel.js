@@ -1,6 +1,6 @@
 /**
  * Angular Carousel - Mobile friendly touch carousel for AngularJS
- * @version v1.0.1 - 2016-03-05
+ * @version v1.0.1 - 2016-10-12
  * @link http://revolunet.github.com/angular-carousel
  * @author Julien Bouquillon <julien@revolunet.com>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -86,59 +86,68 @@ angular.module('angular-carousel').run(['$templateCache', function($templateCach
 
         // TODO: merge in a single function
 
-        // detect supported CSS property
         function detectTransformProperty() {
-            var transformProperty = 'transform',
-                safariPropertyHack = 'webkitTransform';
-            if (typeof document.body.style[transformProperty] !== 'undefined') {
+          var transformProperty = 'transform',
+              safariPropertyHack = 'webkitTransform';
+          if (typeof document.body.style[transformProperty] !== 'undefined') {
 
-                ['webkit', 'moz', 'o', 'ms'].every(function (prefix) {
-                    var e = '-' + prefix + '-transform';
-                    if (typeof document.body.style[e] !== 'undefined') {
-                        transformProperty = e;
-                        return false;
-                    }
-                    return true;
-                });
-            } else if (typeof document.body.style[safariPropertyHack] !== 'undefined') {
-                transformProperty = '-webkit-transform';
-            } else {
-                transformProperty = undefined;
-            }
-            return transformProperty;
-        }
+              ['webkit', 'moz', 'o', 'ms'].every(function (prefix) {
+                  var e = '-' + prefix + '-transform';
+                  if (typeof document.body.style[e] !== 'undefined') {
+                      transformProperty = e;
+                      return false;
+                  }
+                  return true;
+              });
+          } else if (typeof document.body.style[safariPropertyHack] !== 'undefined') {
+              transformProperty = '-webkit-transform';
+          } else {
+              transformProperty = undefined;
+          }
+          return transformProperty;
+      }
 
-        //Detect support of translate3d
-        function detect3dSupport() {
-            var el = document.createElement('p'),
-                has3d,
-                transforms = {
-                    'webkitTransform': '-webkit-transform',
-                    'msTransform': '-ms-transform',
-                    'transform': 'transform'
-                };
-            // Add it to the body to get the computed style
-            document.body.insertBefore(el, null);
-            for (var t in transforms) {
-                if (el.style[t] !== undefined) {
-                    el.style[t] = 'translate3d(1px,1px,1px)';
-                    has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]);
-                }
-            }
-            document.body.removeChild(el);
-            return (has3d !== undefined && has3d.length > 0 && has3d !== "none");
-        }
+      function detect3dSupport() {
+        console.log('detect3dSupport');
+          var el = document.createElement('p'),
+              has3d,
+              transforms = {
+                  'webkitTransform': '-webkit-transform',
+                  'msTransform': '-ms-transform',
+                  'transform': 'transform'
+              };
+          // Add it to the body to get the computed style
+          document.body.insertBefore(el, null);
+          for (var t in transforms) {
+              if (el.style[t] !== undefined) {
+                  el.style[t] = 'translate3d(1px,1px,1px)';
+                  has3d = window.getComputedStyle(el).getPropertyValue(transforms[t]);
+              }
+          }
+          document.body.removeChild(el);
+          return (has3d !== undefined && has3d.length > 0 && has3d !== "none");
+      }
 
-        return {
-            has3d: detect3dSupport(),
-            transformProperty: detectTransformProperty()
-        };
+      return  {
+        transformProperty: undefined,
+        has3d: undefined,
+        load: function load() {
+          if (this.has3d === undefined){
+            this.has3d = detect3dSupport();
+          }
+          if (this.transformProperty === undefined) {
+            this.transformProperty = detectTransformProperty();
+          }
+        },
+      };
 
     })
 
     .service('computeCarouselSlideStyle', ["DeviceCapabilities", function(DeviceCapabilities) {
         // compute transition transform properties for a given slide and global offset
         return function(slideIndex, offset, transitionType) {
+            DeviceCapabilities.load();
+
             var style = {
                     display: 'inline-block'
                 },
